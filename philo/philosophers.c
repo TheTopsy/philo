@@ -74,7 +74,7 @@ long long	get_time()
 	return (ms);
 }
 
-int	fill_table(t_table *table, char **av, int ac, long long ms)
+int	fill_table(t_table *table, char **av, int ac)
 {
 	//table = malloc(sizeof(t_table));
 	table->philo_num = ft_atoi(av[1]);
@@ -89,7 +89,7 @@ int	fill_table(t_table *table, char **av, int ac, long long ms)
 		return (0);
 	if(init_print_and_sim(table) == 0)
 		return (0);
-	table->start_time = (get_time() - ms);
+	table->start_time = (get_time());
 	if((table->philo = malloc(table->philo_num * sizeof(t_table *))) == NULL)
 		return (0);
 	return (1);
@@ -118,58 +118,76 @@ t_philo *assign_forks(t_table *table)
 	return philo;
 }
 
-int print_think(t_philo *philo, t_table *table, long long start)
+int print_act(char *act, t_table *table, t_philo *philo, long long start)
 {
-	if(table->sim_end == 1)
-		return (0);
-	pthread_mutex_lock(&table->print_mutex);
-	printf("%lld %d is thinking\n", get_time() - start, philo->id);
-	pthread_mutex_unlock(&table->print_mutex);
-	if (philo->id % 2 != 0)
-		usleep(table->time_to_eat * 1000);
-	// usleep(1000);
-	return (1);
-}
+	pthread_mutex_lock(&table->sim_mutex);
+        if(table->sim_end == 1)
+        {
+                pthread_mutex_unlock(&table->sim_mutex);
+                return (0);
+        }
+        pthread_mutex_unlock(&table->sim_mutex);
 
-void print_act(char *act, t_table *table, t_philo *philo, long long start)
-{
 	pthread_mutex_lock(&table->print_mutex);
 	//pthread_mutex_lock(&table->sim_mutex);
 	printf("%lld %d %s\n", get_time() - start, philo->id, act);
 	//pthread_mutex_unlock(&table->sim_mutex);
 	pthread_mutex_unlock(&table->print_mutex);
+	return (1);
 }
 
-void take_forks(t_table *table, t_philo *philo, long long start)
+int print_think(t_philo *philo, t_table *table, long long start)
+{
+        /*if(table->sim_end == 1)
+                return (0);*/
+        if((print_act("is thinking", table, philo, start)) == 0)
+                return (0);
+        /*pthread_mutex_lock(&table->print_mutex);
+        printf("%lld %d is thinking\n", get_time() - start, philo->id);
+        pthread_mutex_unlock(&table->print_mutex);*/
+        if (philo->id % 2 != 0)
+                usleep(table->time_to_eat * 1000);
+        // usleep(1000);
+        return (1);
+}
+
+int take_forks(t_table *table, t_philo *philo, long long start)
 {
 	if((philo->id % 2) == 0)
 	{
 		pthread_mutex_lock(philo->right_fork);
-		print_act("has taken a fork", table, philo, start);
+		if((print_act("has taken a fork", table, philo, start)) == 0)
+			return (0);
 		pthread_mutex_lock(philo->left_fork);
-		print_act("has taken a fork", table, philo, start);
+		if((print_act("has taken a fork", table, philo, start)) == 0)
+                        return (0);
+		//print_act("has taken a fork", table, philo, start);
 	}
 	else
 	{
 		pthread_mutex_lock(philo->left_fork);
-	        print_act("has taken a fork", table, philo, start);
+	        if((print_act("has taken a fork", table, philo, start)) == 0)
+                        return (0);
 	        pthread_mutex_lock(philo->right_fork);
-	        print_act("has taken a fork", table, philo, start);
+	        if((print_act("has taken a fork", table, philo, start)) == 0)
+                        return (0);
 	}
+	return (1);
 }
 
 int eat(t_table *table, t_philo *philo, long long start)
 {
-	pthread_mutex_lock(&table->sim_mutex);
+	/*pthread_mutex_lock(&table->sim_mutex);
 	if(table->sim_end == 1)
 	{
 		pthread_mutex_unlock(&table->sim_mutex);
 		return (0);
 	}
-	pthread_mutex_unlock(&table->sim_mutex);
-	take_forks(table, philo, start);
-	print_act("is eating", table, philo, start);
-	//table
+	pthread_mutex_unlock(&table->sim_mutex);*/
+	if((take_forks(table, philo, start)) == 0)
+		return (0);
+	if((print_act("is eating", table, philo, start)) == 0)
+		return (0);
 	pthread_mutex_lock(&philo->meal_mutex);
 	philo->last_meal_time = (get_time());
 	pthread_mutex_unlock(&philo->meal_mutex);
@@ -179,14 +197,15 @@ int eat(t_table *table, t_philo *philo, long long start)
 
 int print_sleep(t_table *table, t_philo *philo, long long start)
 {
-	pthread_mutex_lock(&table->sim_mutex);
+	/*pthread_mutex_lock(&table->sim_mutex);
         if(table->sim_end == 1)
 	{
 		pthread_mutex_unlock(&table->sim_mutex);
 		return (0);
 	}
-	pthread_mutex_unlock(&table->sim_mutex);
-	print_act("is sleeping", table, philo, start);
+	pthread_mutex_unlock(&table->sim_mutex);*/
+	if((print_act("is sleeping", table, philo, start)) == 0)
+		return (0);
 	usleep(table->time_to_sleep * 1000);
     return (1);
 }
@@ -210,7 +229,11 @@ void *routine(void *arg)
 		if(table->sim_end == 1)
 		{
 			pthread_mutex_unlock(&table->sim_mutex);
-			print_act("died", table, philo, start);
+			
+			/*pthread_mutex_lock(&table->print_mutex);
+        		printf("%lld %d died\n", get_time() - start, philo->id);
+        		pthread_mutex_unlock(&table->print_mutex);*/
+			//print_act("died", table, philo, start);
 			return NULL;
 		}
 		pthread_mutex_unlock(&table->sim_mutex);
@@ -226,7 +249,7 @@ void *routine(void *arg)
 			break;
 		if(print_think(philo, table, start) == 0)
 			break;
-		usleep(100);
+		usleep(10);
 	}
 	return NULL;
 }
@@ -253,6 +276,11 @@ void *monitor(void *arg)
 			table->sim_end = 1;
 			pthread_mutex_unlock(&table->sim_mutex);
 			pthread_mutex_unlock(&philo[i]->meal_mutex);
+			
+			pthread_mutex_lock(&table->print_mutex);
+                        printf("%lld %d died\n", get_time() - table->start_time, philo[i]->id);
+                        pthread_mutex_unlock(&table->print_mutex);
+			
 			break;
 		}
 		pthread_mutex_unlock(&philo[i]->meal_mutex);
@@ -314,7 +342,7 @@ int main(int ac, char **av)
 				return (1);
 			}
 		}
-		fill_table(&table, av, ac, ms);
+		fill_table(&table, av, ac);
 		if(table.philo_num == 1)
 			one_philo(ms, table.time_to_die);
 		philo = assign_forks(&table);
