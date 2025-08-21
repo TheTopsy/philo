@@ -7,7 +7,7 @@ NAME_1 = philo
 all : $(NAME_1)
 
 $(NAME_1) : 
-	$(CC) $(FLAGS) philosophers.c philo_helper.c -o philo -g
+	$(CC) $(FLAGS) philosophers.c philo_helper.c -o philo -g -pthread
 
 clean :
 

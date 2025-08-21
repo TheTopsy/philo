@@ -23,7 +23,7 @@ typedef struct s_table
 	pthread_t supervisor;
 	char sim_end;
 	long long start_time;
-
+	struct s_philo **philo;
 } t_table;
 
 typedef struct s_philo
