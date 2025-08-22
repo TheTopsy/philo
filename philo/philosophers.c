@@ -37,6 +37,8 @@ int is_valid(char *num)
 //DESTROY PREVIOUS MUTEXTES WHEN AN INIT FAILS
 int	init_print_and_sim(t_table *table)
 {
+	if(pthread_mutex_init(&table->time_mutex, NULL) != 0)
+		return (0);
 	if(pthread_mutex_init(&table->creation_mutex, NULL) != 0)
 		return (0);
 	if(pthread_mutex_init(&table->sim_mutex, NULL) != 0)
@@ -140,18 +142,18 @@ int print_act(char *act, t_table *table, t_philo *philo, long long start)
 	return (1);
 }
 
-void print_think(t_philo *philo, t_table *table, long long start)
+int print_think(t_philo *philo, t_table *table, long long start)
 {
         if ((print_act("is thinking", table, philo, start)) == 0)
 		{
-        	return ;
+        	return 0;
 		}
 		if (table->philo_num % 2 == 0)
 		{
 			usleep(table->time_to_eat * 1000);
 		}
-        usleep(2000);
-	return ;
+    	usleep(650);
+	return 1;
 }
 
 int take_forks(t_table *table, t_philo *philo, long long start)
@@ -215,13 +217,6 @@ int eat(t_table *table, t_philo *philo, long long start)
 
 int print_sleep(t_table *table, t_philo *philo, long long start)
 {
-	/*pthread_mutex_lock(&table->sim_mutex);
-        if(table->sim_end == 1)
-	{
-		pthread_mutex_unlock(&table->sim_mutex);
-		return (0);
-	}
-	pthread_mutex_unlock(&table->sim_mutex);*/
 	if((print_act("is sleeping", table, philo, start)) == 0)
 		return (0);
 	if(table->time_to_sleep < table->time_to_die)
@@ -242,11 +237,17 @@ void *routine(void *arg)
 	start = get_time();
 	pthread_mutex_lock(&table->creation_mutex);	
 	pthread_mutex_unlock(&table->creation_mutex);
+	
+	pthread_mutex_lock(&table->time_mutex);
 	table->start_time = start;
+	pthread_mutex_unlock(&table->time_mutex);
 	if((philo->id % 2) == 0)
-		print_think(philo, table, start);
-	else
-		 usleep(1000);
+		{
+			usleep(1000);
+			print_think(philo, table, start);
+		}
+			//else
+		//usleep(5000);
 	while(1)
 	{
 		pthread_mutex_lock(&table->sim_mutex);
@@ -258,15 +259,16 @@ void *routine(void *arg)
 		pthread_mutex_unlock(&table->sim_mutex);
 		if(eat(table, philo, start) == 0)
 		{
-			//pthread_mutex_unlock(philo->right_fork);
-			//pthread_mutex_unlock(philo->left_fork);
+			pthread_mutex_unlock(philo->right_fork);
+			pthread_mutex_unlock(philo->left_fork);
 			break;
 		}
 		pthread_mutex_unlock(philo->right_fork);
 		pthread_mutex_unlock(philo->left_fork);
 		if(print_sleep(table, philo, start) == 0)
 			break;
-		print_think(philo, table, start);
+		if(print_think(philo, table, start) == 0)
+			break;
 		// usleep(2000);
 	}
 	return NULL;
@@ -290,6 +292,7 @@ void *monitor(void *arg)
 		pthread_mutex_lock(&table->sim_mutex);
 		if(table->philos_full == table->philo_num)
 		{
+			printf("sim ended !!\n");
 			table->sim_end = 1;
 			pthread_mutex_unlock(&table->sim_mutex);
 			pthread_mutex_unlock(&philo[i]->status_mutex);
@@ -306,7 +309,9 @@ void *monitor(void *arg)
 			pthread_mutex_unlock(&philo[i]->meal_mutex);
 			
 			pthread_mutex_lock(&table->print_mutex);
+			pthread_mutex_lock(&table->time_mutex);
             printf("%lld %d died\n", get_time() - table->start_time, philo[i]->id);
+			pthread_mutex_unlock(&table->time_mutex);
 			pthread_mutex_unlock(&table->print_mutex);
 			
 			break;

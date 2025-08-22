@@ -22,6 +22,7 @@ typedef struct s_table
 	t_mutex_t print_mutex;
 	t_mutex_t sim_mutex;
 	t_mutex_t creation_mutex;
+	t_mutex_t time_mutex;
 	pthread_t supervisor;
 	char sim_end;
 	long long start_time;
