@@ -129,26 +129,15 @@ int print_act(char *act, t_table *table, t_philo *philo, long long start)
         pthread_mutex_unlock(&table->sim_mutex);
 
 	pthread_mutex_lock(&table->print_mutex);
-	//pthread_mutex_lock(&table->sim_mutex);
 	printf("%lld %d %s\n", get_time() - start, philo->id, act);
-	//pthread_mutex_unlock(&table->sim_mutex);
 	pthread_mutex_unlock(&table->print_mutex);
 	return (1);
 }
 
 void print_think(t_philo *philo, t_table *table, long long start)
 {
-        /*if(table->sim_end == 1)
-                return (0);*/
         if((print_act("is thinking", table, philo, start)) == 0)
                 return ;
-        /*pthread_mutex_lock(&table->print_mutex);
-        printf("%lld %d is thinking\n", get_time() - start, philo->id);
-        pthread_mutex_unlock(&table->print_mutex);*/
-       /* if (philo->id % 2 != 0)
-                usleep(table->time_to_eat * 1000);
-	else
-		usleep(100);*/
         usleep(1000);
 	return ;
 }
@@ -193,13 +182,6 @@ int take_forks(t_table *table, t_philo *philo, long long start)
 
 int eat(t_table *table, t_philo *philo, long long start)
 {
-	/*pthread_mutex_lock(&table->sim_mutex);
-	if(table->sim_end == 1)
-	{
-		pthread_mutex_unlock(&table->sim_mutex);
-		return (0);
-	}
-	pthread_mutex_unlock(&table->sim_mutex);*/
 	if((take_forks(table, philo, start)) == 0)
 		return (0);
 	if((print_act("is eating", table, philo, start)) == 0)
@@ -243,22 +225,14 @@ void *routine(void *arg)
 	start = get_time();
 	table->start_time = start;
 	if((philo->id % 2) == 0)
-	{
 		print_think(philo, table, start);
-		//usleep(table->time_to_eat * 1000); // error
-	}
 	while(1)
 	{
 		pthread_mutex_lock(&table->sim_mutex);
 		if(table->sim_end == 1)
 		{
 			pthread_mutex_unlock(&table->sim_mutex);
-			
-			/*pthread_mutex_lock(&table->print_mutex);
-        		printf("%lld %d died\n", get_time() - start, philo->id);
-        		pthread_mutex_unlock(&table->print_mutex);*/
-			//print_act("died", table, philo, start);
-			return NULL;
+			break ;
 		}
 		pthread_mutex_unlock(&table->sim_mutex);
 		if(eat(table, philo, start) == 0)
@@ -272,7 +246,7 @@ void *routine(void *arg)
 		if(print_sleep(table, philo, start) == 0)
 			break;
 		print_think(philo, table, start);
-		usleep(1000);
+		// usleep(1000);
 	}
 	return NULL;
 }
