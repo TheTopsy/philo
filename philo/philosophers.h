@@ -17,9 +17,11 @@ typedef struct s_table
 	int time_to_eat;
 	int time_to_sleep;
 	int num_of_meals;
+	int philos_full;
 	t_mutex_t *forks;
 	t_mutex_t print_mutex;
 	t_mutex_t sim_mutex;
+	t_mutex_t creation_mutex;
 	pthread_t supervisor;
 	char sim_end;
 	long long start_time;
