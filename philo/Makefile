@@ -1,19 +1,26 @@
+NAME = philo
+
 CC = cc
+CFLAGS = -Wall -Werror -Wextra -g
 
-FLAGS = -Wall -Werror -Wextra 
+SRC = philosophers.c philo_helper.c
+OBJ = $(SRC:.c=.o)
 
-NAME_1 = philo
 
-all : $(NAME_1)
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(NAME_1) : 
-	$(CC) $(FLAGS) philosophers.c philo_helper.c -o philo -g -pthread
+all: $(NAME)
 
-clean :
+$(NAME): $(OBJ)
+	$(CC) $(CFLAGS) $^ -o $@
 
-fclean :
-	rm -f $(NAME_1)
+clean:
+	rm -f $(OBJ)
 
-re : fclean all
+fclean: clean
+	rm -f $(NAME)
+
+re: fclean all
 
 .PHONY: all clean fclean re
