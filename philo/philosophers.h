@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   philosophers.h                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: adahab <adahab@student.1337.ma>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/24 13:03:02 by adahab            #+#    #+#             */
+/*   Updated: 2025/08/24 13:03:14 by adahab           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef PHILOSOPHERS_H
 # define PHILOSOPHERS_H
 
@@ -74,5 +86,5 @@ void					create_threads(t_philo *philo, t_table *table);
 void					*handle_one_philo(void *arg);
 void					one_philo(long long ms, t_table *table);
 int						check_zero_v2(t_table *table);
-void destroy_mutexes(t_table *table);
+void					destroy_mutexes(t_table *table, t_philo *philo);
 #endif

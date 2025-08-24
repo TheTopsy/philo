@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   philosophers4.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: adahab <adahab@student.1337.ma>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/24 13:01:51 by adahab            #+#    #+#             */
+/*   Updated: 2025/08/24 13:02:04 by adahab           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "philosophers.h"
 
 void	*routine(void *arg)
@@ -15,7 +27,6 @@ void	*routine(void *arg)
 	{
 		if (check_death(table) == 0)
 		{
-			destroy_mutexes(table);
 			break ;
 		}
 		if (eat(table, philo) == 0)
